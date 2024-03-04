@@ -2,7 +2,10 @@ pipeline{
     agent any
     tools{
         jdk 'jdk17'
-        terraform 'terraform'
+        nodejs 'node16'
+    }
+    environment {
+        SCANNER_HOME=tool 'sonar-scanner'
     }
     stages{
         stage('clean Workspace'){
@@ -12,13 +15,8 @@ pipeline{
         }
         stage('checkout from Git'){
             steps{
-                git branch: 'main', url: 'https://github.com/Aj7Ay/TERRAFORM-JENKINS-CICD.git'
+                git branch: 'main', url: 'https://github.com/Kishorepm01/DevOpsProjects/DevOpsProject-03/Zomato-Clone.git'
             }
-        }
-        stage('Terraform version'){
-             steps{
-                 sh 'terraform --version'
-                }
         }
         stage("Sonarqube Analysis "){
             steps{
@@ -35,29 +33,41 @@ pipeline{
                 }
             } 
         }
+         stage("Install Dependencies"){
+           steps {
+                sh "npm install"
+            } 
+        }
+        stage('OWASP FS SCAN') {
+            steps {
+                dependencyCheck additionalArguments: '---scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
         stage('TRIVY FS SCAN') {
             steps {
                 sh "trivy fs . > trivyfs.txt"
             }
         }
-        stage('Excutable permission to userdata'){
+        stage('Docker Build & Push'){
             steps{
-                sh 'chmod 777 website.sh'
+                script{
+                    withDockerRegistery(credentialsID: 'docker', toolName: 'docker'){
+                        sh "docker build -t zomato ."
+                        sh "docker tag zomato kishoreprasadmacha/zomato:latest "
+                        sh "docker push kishoreprasadmacha/zomato:latest "
+                    }
+                }
             }
         }
-        stage('Terraform init'){
+        stage('TRIVY'){
             steps{
-                sh 'terraform init'
+                sh 'trivy image kishoreprasadmacha/zomato:latest > trivy.txt'
             }
         }
-        stage('Terraform plan'){
+        stage('Deploy to container'){
             steps{
-                sh 'terraform plan'
-            }
-        }
-        stage('Terraform apply'){
-            steps{
-                sh 'terraform ${action} --auto approve'
+                sh 'docker run -d --name zomato -p 3000:3000 kishoreprasadmacha/zomato:latest'
             }
         }
     }
