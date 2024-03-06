@@ -197,7 +197,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'main', url: 'https://github.com/N4si/DevSecOps-Project.git'
+                git branch: 'main', url: 'https://github.com/Kishorepm01/DevOpsProjects/DevOpsProject-04.git'
             }
         }
         stage("Sonarqube Analysis") {
@@ -287,7 +287,7 @@ pipeline{
         }
         stage('Checkout from Git'){
             steps{
-                git branch: 'main', url: 'https://github.com/N4si/DevSecOps-Project.git'
+                git branch: 'main', url: 'https://github.com/Kishorepm01/DevOpsProjects/DevOpsProject-04.git'
             }
         }
         stage("Sonarqube Analysis "){
